@@ -108,7 +108,6 @@ resource "aws_instance" "volvo_instance" {
   #!/bin/bash -xe
   sudo apt update
   sudo apt -y install docker.io
-  sudo usermod -aG docker ubuntu
   sudo curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
   sudo chmod +x ./kubectl
   sudo mv ./kubectl /usr/local/bin/kubectl
@@ -116,7 +115,10 @@ resource "aws_instance" "volvo_instance" {
   sudo chmod +x minikube
   sudo mv minikube /usr/local/bin/
   sudo apt -y install conntrack
+  sudo usermod -aG docker $USER
+  newgrp docker
   minikube start
+  exit
   EOL
 
   tags = {
