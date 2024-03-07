@@ -1,9 +1,9 @@
 provider "aws" {
-  region = "us-east-1"
+  region = var.location
 }
 
 resource "aws_vpc" "volvo-vpc" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block = var.vpc-cidr
   tags = {
     Name = "volvo-vpc"
   }
@@ -11,9 +11,10 @@ resource "aws_vpc" "volvo-vpc" {
 
 
 resource "aws_subnet" "volvo-pub-subnet" {
-  vpc_id            = aws_vpc.volvo-vpc.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = "us-east-1a"
+  vpc_id                  = aws_vpc.volvo-vpc.id
+  cidr_block              = var.subnet-cidr
+  availability_zone       = var.subent-az
+  map_public_ip_on_launch = "true"
   tags = {
     Name = "volvo-sub"
   }
@@ -59,7 +60,15 @@ resource "aws_security_group" "volvo_security_group" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  
+
+  ingress {
+    from_port   = 30000
+    to_port     = 30000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+
   ingress {
     from_port   = 22
     to_port     = 22
@@ -88,14 +97,39 @@ resource "aws_security_group" "volvo_security_group" {
 
 
 resource "aws_instance" "volvo_instance" {
-  ami             = "ami-0c7217cdde317cfec"
-  instance_type   = "t2.micro"
-  subnet_id       = aws_subnet.volvo-pub-subnet.id
-  security_groups = [aws_security_group.volvo_security_group.id]
+  ami                         = var.ami-id
+  instance_type               = var.instance-type
+  subnet_id                   = aws_subnet.volvo-pub-subnet.id
+  security_groups             = [aws_security_group.volvo_security_group.id]
   associate_public_ip_address = true
-  key_name        = "volvo-key"
-  
-    tags = {
+  key_name                    = var.key
+
+  user_data = <<-EOL
+  #!/bin/bash -xe
+  sudo apt update
+  sudo apt -y install docker.io
+  sudo usermod -aG docker ubuntu && newgrp docker
+  sudo curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
+  sudo chmod +x ./kubectl
+  sudo mv ./kubectl /usr/local/bin/kubectl
+  sudo curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+  sudo chmod +x minikube
+  sudo mv minikube /usr/local/bin/
+  sudo apt -y install conntrack
+  minikube start
+  EOL
+
+  tags = {
     Name = "volvo-ec2"
   }
+}
+
+output "public_ip_of_volvo_server" {
+  description = "this is the public IP"
+  value       = aws_instance.volvo_instance.public_ip
+}
+
+output "private_ip_of_volvo_server" {
+  description = "this is the public IP"
+  value       = aws_instance.volvo_instance.private_ip
 }
