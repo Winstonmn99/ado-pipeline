@@ -3,7 +3,7 @@ pipeline {
     
     environment {
         DOCKER_IMAGE_NAME = 'python-app'
-        DOCKERFILE_PATH = './python/Dockerfile'
+        DOCKERFILE_PATH = './Dockerfile'
     }
 
     stages {
