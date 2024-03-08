@@ -3,7 +3,7 @@ pipeline {
     
     environment {
         DOCKER_IMAGE_NAME = 'python-app'
-        DOCKERFILE_PATH = './Dockerfile'
+        DOCKERFILE_PATH = './python/Dockerfile'
     }
 
     stages {
@@ -25,7 +25,7 @@ pipeline {
     post {
         success {
             echo 'Docker image built successfully!'
-            // You can push the image to a Docker registry here if needed
+
         }
         failure {
             echo 'Failed to build Docker image'
