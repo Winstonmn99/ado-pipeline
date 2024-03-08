@@ -2,7 +2,7 @@ FROM python:3.8-slim
 
 WORKDIR /app
 
-COPY welcome.py ./
+COPY ./welcome.py ./requirements.txt ./
 
 RUN pip install Flask
 
