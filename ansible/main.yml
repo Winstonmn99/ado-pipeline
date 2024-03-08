@@ -1,0 +1,30 @@
+---
+
+- name: Setup VM with git and check k8 is running
+  hosts: aws
+
+
+  tasks:
+
+    - name: Clone git repository
+      git:
+        repo: "{{ git_repo }}"
+        dest: "{{ host_path }}"
+        accept_hostkey: yes
+        version: "{{ branch }}"
+
+    - name: Check k8 service is running
+      shell: minikube status | grep kubelet | cut -d " " -f2
+      register: status
+
+    - debug:
+        msg: kubernetes status = "{{ status.stdout }}"
+
+    - name: Start deployment process
+      shell: kubectl apply -f k8-deployment.yaml && kubectl apply -f k8-service.yaml
+      args:
+        chdir: "{{kube_dir}}"
+      when: status.stdout == "Running"
+
+    - name: Clean up directory
+      shell: rm -rf {{ host_path }}

@@ -1,0 +1,6 @@
+---
+
+git_repo: https://github.com/Winstonmn99/volvo-test.git
+host_path: /home/ubuntu/volvo
+branch: main
+kube_dir: "{{host_path}}/kubernetes"

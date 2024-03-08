@@ -1,12 +1,12 @@
 trigger:
-- main
+- none
 
 resources:
 - repo: self
 
 variables:
-  tag: '$(Build.BuildId)'
-  ImageName: 'mabenwinston/volvo_test:$(Build.BuildId)'
+  tag: 'latest'
+  ImageName: 'mabenwinston/volvo_test'
 
 pool: volvo
 
@@ -21,14 +21,33 @@ stages:
     - task: Docker@2
       displayName: Build the docker image
       inputs:
-        repository: 'mabenwinston/volvo_test'
+        repository: '$(ImageName)'
         command: 'build'
         dockerfile: '$(Build.SourcesDirectory)/python/Dockerfile'
+        tags: $(tag)
 
     - task: Docker@2
       displayName: Push the docker image to Docker Hub
       inputs:
         containerRegistry: 'Docker Hub'
-        repository: 'mabenwinston/volvo_test'
+        repository: '$(ImageName)'
         imageName: 'python-image'
         command: 'push'
+        tags: $(tag)
+
+- stage: Deploy
+  dependsOn: Build
+  displayName: Deploy on EC2 kubernetes setup
+  jobs:
+    - job: Deploy
+      displayName: Deploy
+      steps:
+      - script: |
+          mkdir -p ~/ado_temp && cd ~/ado_temp
+          git clone https://mabenwinston@dev.azure.com/mabenwinston/volvo_project/_git/volvo_project
+          cd volvo_project/ansible
+          ansible-playbook -i inventory/aws/hosts main.yml
+
+
+
+  
