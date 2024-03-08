@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY ./welcome.py ./requirements.txt ./
 
-RUN pip3 install -r requirements.txt
+RUN pip install -r requirements.txt
 
 EXPOSE 5000
 
